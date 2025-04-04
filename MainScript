@@ -1,5 +1,13 @@
 local player = game.Players.LocalPlayer
 
+-- Recommended Sound IDs table (put this at the top)
+local recommendedSounds = {
+	"9045743976",  -- Existing sound IDs
+	"1846405622",  -- Previously added sound ID
+	"1837768517",  -- Another previously added sound ID
+	"1840684529",  -- Newly added sound ID
+}
+
 -- Create GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "SoundGui"
@@ -8,8 +16,8 @@ gui.Parent = player:WaitForChild("PlayerGui")
 
 -- Create Frame
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 300, 0, 180)
-frame.Position = UDim2.new(0.5, -150, 0.5, -90)
+frame.Size = UDim2.new(0, 300, 0, 350)  -- Increased height for volume input box
+frame.Position = UDim2.new(0.5, -150, 0.5, -150)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.Parent = gui
 
@@ -25,7 +33,7 @@ corner.Parent = frame
 -- TextBox for Sound ID
 local idBox = Instance.new("TextBox")
 idBox.Size = UDim2.new(0.9, 0, 0, 30)
-idBox.Position = UDim2.new(0.05, 0, 0.1, 0)
+idBox.Position = UDim2.new(0.05, 0, 0.05, 0)
 idBox.PlaceholderText = "Enter Sound ID"
 idBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 idBox.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -33,10 +41,39 @@ idBox.ClearTextOnFocus = false
 idBox.Text = ""
 idBox.Parent = frame
 
+-- Recommended Label
+local recLabel = Instance.new("TextLabel")
+recLabel.Size = UDim2.new(0.9, 0, 0, 20)
+recLabel.Position = UDim2.new(0.05, 0, 0.19, 0)
+recLabel.Text = "Recommended Sounds:"
+recLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+recLabel.BackgroundTransparency = 1
+recLabel.TextScaled = true
+recLabel.Font = Enum.Font.SourceSans
+recLabel.Parent = frame
+
+-- Generate buttons from the table of recommended sounds
+for i, soundId in ipairs(recommendedSounds) do
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0.9, 0, 0, 25)
+	btn.Position = UDim2.new(0.05, 0, 0.19 + (i * 0.08), 0)
+	btn.Text = soundId
+	btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Font = Enum.Font.SourceSans
+	btn.TextScaled = true
+	btn.Parent = frame
+
+	-- Clicking a button fills the TextBox with the sound ID
+	btn.MouseButton1Click:Connect(function()
+		idBox.Text = soundId
+	end)
+end
+
 -- Play Button
 local playButton = Instance.new("TextButton")
 playButton.Size = UDim2.new(0.4, 0, 0, 30)
-playButton.Position = UDim2.new(0.05, 0, 0.4, 0)
+playButton.Position = UDim2.new(0.05, 0, 0.85, 0)
 playButton.Text = "Play"
 playButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
 playButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -45,13 +82,35 @@ playButton.Parent = frame
 -- Stop Button
 local stopButton = Instance.new("TextButton")
 stopButton.Size = UDim2.new(0.4, 0, 0, 30)
-stopButton.Position = UDim2.new(0.55, 0, 0.4, 0)
+stopButton.Position = UDim2.new(0.55, 0, 0.85, 0)
 stopButton.Text = "Stop"
 stopButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
 stopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 stopButton.Parent = frame
 
--- Create or recreate sound inside PlayerGui
+-- Volume TextBox
+local volumeBox = Instance.new("TextBox")
+volumeBox.Size = UDim2.new(0.9, 0, 0, 30)
+volumeBox.Position = UDim2.new(0.05, 0, 0.75, 0)
+volumeBox.PlaceholderText = "Enter Volume (0 - 100)"
+volumeBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+volumeBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+volumeBox.ClearTextOnFocus = false
+volumeBox.Text = "100"  -- Default volume is 100%
+volumeBox.Parent = frame
+
+-- Volume label
+local volumeLabel = Instance.new("TextLabel")
+volumeLabel.Size = UDim2.new(0.9, 0, 0, 20)
+volumeLabel.Position = UDim2.new(0.05, 0, 0.7, 0)
+volumeLabel.Text = "Volume"
+volumeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+volumeLabel.BackgroundTransparency = 1
+volumeLabel.TextScaled = true
+volumeLabel.Font = Enum.Font.SourceSans
+volumeLabel.Parent = frame
+
+-- Function to make the sound in PlayerGui
 local function makeSound()
 	local existing = player.PlayerGui:FindFirstChild("LocalSound")
 	if existing then
@@ -65,12 +124,22 @@ end
 
 local sound = makeSound()
 
+-- Update volume based on TextBox value
+local function updateVolume()
+	local volume = tonumber(volumeBox.Text)
+	if volume then
+		volume = math.clamp(volume / 100, 0, 1)  -- Convert to range 0 - 1
+		sound.Volume = volume
+	end
+end
+
 -- Play Button Logic
 playButton.MouseButton1Click:Connect(function()
 	local id = tonumber(idBox.Text)
 	if id then
 		sound.SoundId = "rbxassetid://" .. id
 		sound:Play()
+		updateVolume()  -- Apply volume from TextBox when playing sound
 	end
 end)
 
@@ -81,8 +150,13 @@ stopButton.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Recreate sound on respawn so it keeps working
+-- Volume TextBox Change Logic
+volumeBox.FocusLost:Connect(function()
+	updateVolume()  -- Update the volume when user finishes typing
+end)
+
+-- Respawn Fix: remake sound after death
 player.CharacterAdded:Connect(function()
-	task.wait(1) -- wait for PlayerGui to fully reload
+	task.wait(1)
 	sound = makeSound()
 end)
