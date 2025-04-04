@@ -1,6 +1,6 @@
 local player = game.Players.LocalPlayer
 
--- Create ScreenGui
+-- Create GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "SoundGui"
 gui.ResetOnSpawn = false
@@ -13,29 +13,24 @@ frame.Position = UDim2.new(0.5, -150, 0.5, -90)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.Parent = gui
 
--- Make frame draggable
+-- UIDragDetector
 local dragDetector = Instance.new("UIDragDetector")
 dragDetector.Parent = frame
 
--- Add UICorner for rounded edges
+-- UICorner
 local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0.1, 0)
 corner.Parent = frame
-
--- Create Sound (local sound only for this player)
-local sound = Instance.new("Sound")
-sound.Name = "LocalSound"
-sound.Parent = player:WaitForChild("PlayerGui")
 
 -- TextBox for Sound ID
 local idBox = Instance.new("TextBox")
 idBox.Size = UDim2.new(0.9, 0, 0, 30)
 idBox.Position = UDim2.new(0.05, 0, 0.1, 0)
-idBox.PlaceholderText = "Enter Sound ID (e.g., 9118823104)"
-idBox.Text = ""
+idBox.PlaceholderText = "Enter Sound ID"
 idBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 idBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 idBox.ClearTextOnFocus = false
+idBox.Text = ""
 idBox.Parent = frame
 
 -- Play Button
@@ -56,7 +51,21 @@ stopButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
 stopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 stopButton.Parent = frame
 
--- Play Sound Logic
+-- Create or recreate sound inside PlayerGui
+local function makeSound()
+	local existing = player.PlayerGui:FindFirstChild("LocalSound")
+	if existing then
+		existing:Destroy()
+	end
+	local s = Instance.new("Sound")
+	s.Name = "LocalSound"
+	s.Parent = player.PlayerGui
+	return s
+end
+
+local sound = makeSound()
+
+-- Play Button Logic
 playButton.MouseButton1Click:Connect(function()
 	local id = tonumber(idBox.Text)
 	if id then
@@ -65,9 +74,15 @@ playButton.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Stop Sound Logic
+-- Stop Button Logic
 stopButton.MouseButton1Click:Connect(function()
-	if sound.IsPlaying then
+	if sound and sound.IsPlaying then
 		sound:Stop()
 	end
+end)
+
+-- Recreate sound on respawn so it keeps working
+player.CharacterAdded:Connect(function()
+	task.wait(1) -- wait for PlayerGui to fully reload
+	sound = makeSound()
 end)
