@@ -1,0 +1,73 @@
+local player = game.Players.LocalPlayer
+
+-- Create ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "SoundGui"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Create Frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 300, 0, 180)
+frame.Position = UDim2.new(0.5, -150, 0.5, -90)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.Parent = gui
+
+-- Make frame draggable
+local dragDetector = Instance.new("UIDragDetector")
+dragDetector.Parent = frame
+
+-- Add UICorner for rounded edges
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0.1, 0)
+corner.Parent = frame
+
+-- Create Sound (local sound only for this player)
+local sound = Instance.new("Sound")
+sound.Name = "LocalSound"
+sound.Parent = player:WaitForChild("PlayerGui")
+
+-- TextBox for Sound ID
+local idBox = Instance.new("TextBox")
+idBox.Size = UDim2.new(0.9, 0, 0, 30)
+idBox.Position = UDim2.new(0.05, 0, 0.1, 0)
+idBox.PlaceholderText = "Enter Sound ID (e.g., 9118823104)"
+idBox.Text = ""
+idBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+idBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+idBox.ClearTextOnFocus = false
+idBox.Parent = frame
+
+-- Play Button
+local playButton = Instance.new("TextButton")
+playButton.Size = UDim2.new(0.4, 0, 0, 30)
+playButton.Position = UDim2.new(0.05, 0, 0.4, 0)
+playButton.Text = "Play"
+playButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+playButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+playButton.Parent = frame
+
+-- Stop Button
+local stopButton = Instance.new("TextButton")
+stopButton.Size = UDim2.new(0.4, 0, 0, 30)
+stopButton.Position = UDim2.new(0.55, 0, 0.4, 0)
+stopButton.Text = "Stop"
+stopButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+stopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+stopButton.Parent = frame
+
+-- Play Sound Logic
+playButton.MouseButton1Click:Connect(function()
+	local id = tonumber(idBox.Text)
+	if id then
+		sound.SoundId = "rbxassetid://" .. id
+		sound:Play()
+	end
+end)
+
+-- Stop Sound Logic
+stopButton.MouseButton1Click:Connect(function()
+	if sound.IsPlaying then
+		sound:Stop()
+	end
+end)
